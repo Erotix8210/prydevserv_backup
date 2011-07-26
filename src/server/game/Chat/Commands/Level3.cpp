@@ -3347,60 +3347,6 @@ bool ChatHandler::HandleServerIdleShutDownCommand(const char *args)
     return true;
 }
 
-bool ChatHandler::HandleQuestAdd(const char *args)
-{
-    Player* player = getSelectedPlayer();
-    if (!player)
-    {
-        SendSysMessage(LANG_NO_CHAR_SELECTED);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    // .addquest #entry'
-    // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
-    char* cId = extractKeyFromLink((char*)args,"Hquest");
-    if (!cId)
-        return false;
-
-    uint32 entry = atol(cId);
-
-    Quest const* pQuest = sObjectMgr->GetQuestTemplate(entry);
-
-    if (!pQuest)
-    {
-        PSendSysMessage(LANG_COMMAND_QUEST_NOTFOUND,entry);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    // check item starting quest (it can work incorrectly if added without item in inventory)
-    for (uint32 id = 0; id < sItemStorage.MaxEntry; id++)
-    {
-        ItemPrototype const *pProto = sItemStorage.LookupEntry<ItemPrototype>(id);
-        if (!pProto)
-            continue;
-
-        if (pProto->StartQuest == entry)
-        {
-            PSendSysMessage(LANG_COMMAND_QUEST_STARTFROMITEM, entry, pProto->ItemId);
-            SetSentErrorMessage(true);
-            return false;
-        }
-    }
-
-    // ok, normal (creature/GO starting) quest
-    if (player->CanAddQuest(pQuest, true))
-    {
-        player->AddQuest(pQuest, NULL);
-
-        if (player->CanCompleteQuest(entry))
-            player->CompleteQuest(entry);
-    }
-
-    return true;
-}
-
 bool ChatHandler::HandleQuestRemove(const char *args)
 {
     Player* player = getSelectedPlayer();
